@@ -19,8 +19,11 @@ const YOUTUBE = [
   "UCLgF_LhuA5c26UdU51Pel5Q", // Verzonken Glorie
   "UCgxM87t7JZF60Z37CQbMaYA", // De Ideale Wereld
   "UC59gT3bFTFNSqafRcluDIsQ", // VRT NWS
+  "UCwcX23XtfaXF9h7NfirP7mg", // TV Limburg België
+  "UCR9sKFsvZP2UoGNyBExsZCg", // Onroerend Erfgoed
+  "UCB0gz41oH3LOmGIX1EODvCA", // VRT MAX
 ];
-const PER_CHANNEL = 4;
+const PER_CHANNEL = 3;
 const FEEDS = [
   { name: "Reddit", reddit: REDDIT },
   { name: "Video's", youtube: YOUTUBE },
