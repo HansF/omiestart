@@ -9,7 +9,7 @@ import { writeFile } from "node:fs/promises";
 const REDDIT = [
   { subs: "katten+Klussers+GroeneVingers", period: "week" },
   // English, but mostly pictures.
-  { subs: "Eyebleach+Jigsawpuzzles+OldPhotosInRealLife", period: "week" },
+  { subs: "Eyebleach+Jigsawpuzzles+OldPhotosInRealLife+goodboomerhumor", period: "week" },
   { subs: "tuinieren+moestuin+kamerplanten+handwerken+wandelen", period: "month" },
 ];
 const PER_SUB = 3;
