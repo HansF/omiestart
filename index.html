@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Omiestart</title>
+<title>Omistart</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127799;</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -233,7 +233,7 @@
   <div class="weather" id="weather" hidden></div>
 
   <header>
-    <h1 id="greeting">Dag omie!</h1>
+    <h1 id="greeting">Dag omi!</h1>
     <div id="today"><span id="date"></span><span class="dot">&bull;</span><span id="clock"></span></div>
   </header>
 
@@ -296,7 +296,7 @@
     const now = new Date();
     const h = now.getHours();
     const part = h < 6 ? "Goeienacht" : h < 12 ? "Goeiemorgen" : h < 18 ? "Goeiemiddag" : "Goeieavond";
-    document.getElementById("greeting").textContent = part + ", omie!";
+    document.getElementById("greeting").textContent = part + ", omi!";
     const date = now.toLocaleDateString("nl-BE", { weekday: "long", day: "numeric", month: "long" });
     document.getElementById("date").textContent = date[0].toUpperCase() + date.slice(1);
     document.getElementById("clock").textContent = now.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
