@@ -61,6 +61,21 @@
   }
   #today { font-size: 1.2rem; color: var(--muted); }
   #today .dot { margin: 0 10px; opacity: .5; }
+  .weather {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 8px 20px 8px 14px;
+    background: var(--card);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    font-size: 1.1rem;
+    color: var(--muted);
+  }
+  .weather[hidden] { display: none; }
+  .weather .emoji { font-size: 1.7rem; line-height: 1; }
+  .weather .temp { font-size: 1.5rem; font-weight: 600; color: var(--text); }
 
   /* Search */
   .search { position: relative; width: 100%; max-width: 640px; margin-bottom: 48px; }
@@ -219,6 +234,7 @@
   <header>
     <h1 id="greeting">Dag omie!</h1>
     <div id="today"><span id="date"></span><span class="dot">&bull;</span><span id="clock"></span></div>
+    <div class="weather" id="weather" hidden></div>
   </header>
 
   <div class="search" id="search">
@@ -286,6 +302,53 @@
   }
   tick();
   setInterval(tick, 10000);
+
+  // Weather (Open-Meteo, no key needed)
+  const PLACE = { name: "Hasselt", lat: 50.93, lon: 5.34 };
+  const WEATHER = [
+    [[0], "☀️", "🌙", "Zonnig"],
+    [[1, 2], "⛅", "☁️", "Licht bewolkt"],
+    [[3], "☁️", "☁️", "Bewolkt"],
+    [[45, 48], "🌫️", "🌫️", "Mist"],
+    [[51, 53, 55, 56, 57], "🌦️", "🌧️", "Motregen"],
+    [[61, 63, 65, 66, 67, 80, 81, 82], "🌧️", "🌧️", "Regen"],
+    [[71, 73, 75, 77, 85, 86], "🌨️", "🌨️", "Sneeuw"],
+    [[95, 96, 99], "⛈️", "⛈️", "Onweer"],
+  ];
+
+  function loadWeather() {
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=" + PLACE.lat + "&longitude=" + PLACE.lon
+      + "&current=temperature_2m,weather_code,is_day"
+      + "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max"
+      + "&timezone=Europe%2FBrussels&forecast_days=1";
+    fetch(url)
+      .then(r => r.json())
+      .then(({ current, daily }) => {
+        const [, dayIcon, nightIcon, label] = WEATHER.find(([codes]) => codes.includes(current.weather_code)) || [, "🌡️", "🌡️", ""];
+        const rain = daily.precipitation_probability_max[0];
+        const parts = [
+          label,
+          Math.round(daily.temperature_2m_min[0]) + "° tot " + Math.round(daily.temperature_2m_max[0]) + "°",
+        ];
+        if (rain >= 30) parts.push(rain + "% kans op regen");
+        const el = document.getElementById("weather");
+        el.innerHTML = "";
+        const emoji = document.createElement("span");
+        emoji.className = "emoji";
+        emoji.textContent = current.is_day ? dayIcon : nightIcon;
+        const temp = document.createElement("span");
+        temp.className = "temp";
+        temp.textContent = Math.round(current.temperature_2m) + "°";
+        const text = document.createElement("span");
+        text.textContent = parts.join(" · ");
+        el.append(emoji, temp, text);
+        el.title = "Weer in " + PLACE.name;
+        el.hidden = false;
+      })
+      .catch(() => {});
+  }
+  loadWeather();
+  setInterval(loadWeather, 30 * 60000);
 
   // Search suggestions (Google suggest via JSONP)
   const box = document.getElementById("search");
