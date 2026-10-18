@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omiestart</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌷</text></svg>">
+<style>
+  :root {
+    --bg: #f6f1ea;
+    --card: #ffffff;
+    --text: #2b2622;
+    --muted: #6f655c;
+    --accent: #c0583c;
+    --ring: #e3d8cb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px;
+  }
+  header { text-align: center; margin-bottom: 32px; }
+  #greeting { font-size: 2.6rem; font-weight: 600; margin: 0; }
+  #date { font-size: 1.4rem; color: var(--muted); margin-top: 8px; }
+  #clock { font-size: 1.4rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  form { width: 100%; max-width: 720px; margin-bottom: 44px; display: flex; gap: 10px; }
+  form input {
+    flex: 1;
+    font-size: 1.4rem;
+    padding: 18px 24px;
+    border: 2px solid var(--ring);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--text);
+    outline: none;
+  }
+  form input:focus { border-color: var(--accent); }
+  form button {
+    font-size: 1.3rem;
+    padding: 0 28px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .grid {
+    width: 100%;
+    max-width: 1100px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 20px;
+  }
+  .tile {
+    background: var(--card);
+    border: 2px solid transparent;
+    border-radius: 20px;
+    padding: 26px 12px 20px;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.06);
+    transition: transform .12s, border-color .12s;
+  }
+  .tile:hover, .tile:focus { transform: translateY(-3px); border-color: var(--accent); outline: none; }
+  .tile img, .tile .letter {
+    width: 64px; height: 64px; border-radius: 14px;
+  }
+  .tile .letter {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #fff; font-size: 2rem; font-weight: 700;
+  }
+  .tile span { font-size: 1.25rem; font-weight: 500; text-align: center; }
+
+  @media (max-width: 500px) {
+    #greeting { font-size: 2rem; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    form button { padding: 0 18px; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1 id="greeting">Dag omie!</h1>
+    <div id="date"></div>
+    <div id="clock"></div>
+  </header>
+
+  <form action="https://www.google.com/search" method="get">
+    <input name="q" placeholder="Zoek op Google…" autofocus autocomplete="off">
+    <button type="submit">Zoek</button>
+  </form>
+
+  <main class="grid" id="links"></main>
+
+<script>
+  // Pas hier de knoppen aan: [naam, adres]
+  const LINKS = [
+    ["Webmail", "https://webmail.proximus.be/"],
+    ["Gmail", "https://mail.google.com/"],
+    ["Facebook", "https://www.facebook.com/"],
+    ["HLN", "https://www.hln.be/"],
+    ["HBVL", "https://www.hbvl.be/"],
+    ["In memoriam", "https://www.inmemoriam.be/"],
+    ["Seniorennet", "https://www.seniorennet.be/"],
+    ["BNP", "https://www.bnpparibasfortis.be/"],
+    ["Mijn gezondheid", "https://www.mijngezondheid.belgie.be/"],
+    ["bol", "https://www.bol.com/be/nl/"],
+    ["Delhaize", "https://www.delhaize.be/nl"],
+    ["YouTube", "https://www.youtube.com/"],
+    ["Maps", "https://maps.google.com/"],
+    ["Google", "https://www.google.be/"],
+  ];
+
+  const grid = document.getElementById("links");
+  for (const [name, url] of LINKS) {
+    const a = document.createElement("a");
+    a.className = "tile";
+    a.href = url;
+    const img = document.createElement("img");
+    img.alt = "";
+    img.src = "https://www.google.com/s2/favicons?sz=128&domain_url=" + encodeURIComponent(url);
+    img.onerror = () => {
+      const letter = document.createElement("div");
+      letter.className = "letter";
+      letter.textContent = name[0].toUpperCase();
+      img.replaceWith(letter);
+    };
+    const label = document.createElement("span");
+    label.textContent = name;
+    a.append(img, label);
+    grid.append(a);
+  }
+
+  function tick() {
+    const now = new Date();
+    const h = now.getHours();
+    const part = h < 12 ? "Goeiemorgen" : h < 18 ? "Goeiemiddag" : "Goeieavond";
+    document.getElementById("greeting").textContent = part + ", omie!";
+    const date = now.toLocaleDateString("nl-BE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    document.getElementById("date").textContent = date[0].toUpperCase() + date.slice(1);
+    document.getElementById("clock").textContent = now.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
+  }
+  tick();
+  setInterval(tick, 10000);
+</script>
+</body>
+</html>
