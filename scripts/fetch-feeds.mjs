@@ -1,14 +1,34 @@
-// Fetches the news feeds and writes feeds.json next to index.html.
+// Fetches Dutch-language Reddit posts and free news feeds, and writes feeds.json next to index.html.
 // Runs in GitHub Actions (see .github/workflows/deploy.yml); no dependencies.
 import { writeFile } from "node:fs/promises";
 
+// Kept to calm hobby subreddits: no politics or general news subs.
+// Quiet subreddits use a longer period so there is enough to read.
 const FEEDS = [
+  { name: "Tuin", subs: "tuinieren+moestuin", period: "month" },
+  { name: "Kamerplanten", subs: "kamerplanten", period: "month" },
+  { name: "Huis", subs: "Klussers", period: "week" },
+  { name: "Koken", subs: "koken", period: "month" },
+  // News sites without a paywall.
   { name: "VRT NWS", url: "https://www.vrt.be/vrtnws/nl.rss.articles.xml" },
-  { name: "HLN", url: "https://www.hln.be/home/rss.xml" },
-  { name: "HBVL", url: "https://www.hbvl.be/rss/" },
   { name: "TVL", url: "https://www.tvl.be/rss" },
 ];
-const PER_FEED = 6;
+const PER_FEED = 8;
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Anonymous Reddit allows about one request a minute, so wait out a 429 and retry.
+async function fetchReddit(feed) {
+  const url = `https://www.reddit.com/r/${feed.subs}/top/.rss?t=${feed.period}&limit=25`;
+  for (let attempt = 1; ; attempt++) {
+    const res = await fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) });
+    if (res.ok) return res.text();
+    if (res.status !== 429 || attempt === 4) throw new Error(`HTTP ${res.status}`);
+    const wait = (+res.headers.get("x-ratelimit-reset") || 60) + 2;
+    console.log(`${feed.name}: rate limited, waiting ${wait}s`);
+    await sleep(wait * 1000);
+  }
+}
 
 const decode = s => s
   .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
@@ -50,11 +70,16 @@ function parse(xml) {
 const result = { updated: new Date().toISOString(), feeds: [] };
 for (const feed of FEEDS) {
   try {
-    const res = await fetch(feed.url, { headers: { "User-Agent": "Mozilla/5.0 (omiestart)" }, signal: AbortSignal.timeout(20000) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const items = parse(await res.text())
-      .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-      .slice(0, PER_FEED);
+    // Keep Reddit's "top" order; sort news by date.
+    let items;
+    if (feed.subs) {
+      items = parse(await fetchReddit(feed));
+    } else {
+      const res = await fetch(feed.url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      items = parse(await res.text()).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    }
+    items = items.slice(0, PER_FEED);
     result.feeds.push({ name: feed.name, items });
     console.log(`${feed.name}: ${items.length} items`);
   } catch (err) {

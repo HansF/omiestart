@@ -233,7 +233,7 @@
   <div class="weather" id="weather" hidden></div>
 
   <header>
-    <h1 id="greeting">Dag omi!</h1>
+    <h1 id="greeting">Dag Omi!</h1>
     <div id="today"><span id="date"></span><span class="dot">&bull;</span><span id="clock"></span></div>
   </header>
 
@@ -250,7 +250,7 @@
 
   <section class="news" id="news" hidden>
     <div class="news-head">
-      <h2>Het nieuws</h2>
+      <h2>Leuk om te lezen</h2>
       <div class="tabs" id="tabs" role="tablist"></div>
     </div>
     <ul class="stories" id="stories"></ul>
@@ -296,7 +296,7 @@
     const now = new Date();
     const h = now.getHours();
     const part = h < 6 ? "Goeienacht" : h < 12 ? "Goeiemorgen" : h < 18 ? "Goeiemiddag" : "Goeieavond";
-    document.getElementById("greeting").textContent = part + ", omi!";
+    document.getElementById("greeting").textContent = part + ", Omi!";
     const date = now.toLocaleDateString("nl-BE", { weekday: "long", day: "numeric", month: "long" });
     document.getElementById("date").textContent = date[0].toUpperCase() + date.slice(1);
     document.getElementById("clock").textContent = now.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
@@ -435,7 +435,7 @@
     }
   });
 
-  // News (feeds.json is refreshed every 30 minutes by GitHub Actions)
+  // Reddit posts (feeds.json is refreshed every 30 minutes by GitHub Actions)
   function ago(iso) {
     if (!iso) return "";
     const min = Math.round((Date.now() - new Date(iso)) / 60000);
