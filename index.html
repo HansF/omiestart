@@ -1,10 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="nl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Omiestart</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌷</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸŒ·</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&display=swap" rel="stylesheet">
@@ -156,17 +156,69 @@
   .icon img { width: 34px; height: 34px; }
   .tile span { font-size: 1.05rem; font-weight: 600; text-align: center; line-height: 1.25; }
 
+  /* News */
+  .news { width: 100%; max-width: 896px; margin-top: 64px; }
+  .news[hidden] { display: none; }
+  .news-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .news h2 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.8rem; margin: 0; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tabs button {
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 2px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .tabs button:hover { border-color: var(--accent); }
+  .tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .stories {
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+  }
+  .stories a {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 12px;
+    border-radius: 14px;
+    color: var(--text);
+    text-decoration: none;
+    transition: background .15s;
+  }
+  .stories a:hover, .stories a:focus-visible { background: var(--accent-soft); outline: none; }
+  .stories li + li { border-top: 1px solid var(--line); }
+  .stories .thumb {
+    flex: none;
+    width: 112px; height: 74px;
+    border-radius: 10px;
+    background: var(--accent-soft) center / cover no-repeat;
+  }
+  .stories .title { font-size: 1.15rem; font-weight: 600; line-height: 1.35; }
+  .stories .when { display: block; margin-top: 4px; font-size: .95rem; font-weight: 400; color: var(--muted); }
+
   @media (max-width: 520px) {
     body { padding-top: 6vh; }
     .grid { gap: 12px; }
     .tile { width: calc(50% - 6px); }
+    .stories .thumb { width: 84px; height: 60px; }
+    .stories a { gap: 14px; }
   }
 </style>
 </head>
 <body>
   <header>
     <h1 id="greeting">Dag omie!</h1>
-    <div id="today"><span id="date"></span><span class="dot">•</span><span id="clock"></span></div>
+    <div id="today"><span id="date"></span><span class="dot">â€¢</span><span id="clock"></span></div>
   </header>
 
   <div class="search" id="search">
@@ -179,6 +231,14 @@
   </div>
 
   <main class="grid" id="links"></main>
+
+  <section class="news" id="news" hidden>
+    <div class="news-head">
+      <h2>Het nieuws</h2>
+      <div class="tabs" id="tabs" role="tablist"></div>
+    </div>
+    <ul class="stories" id="stories"></ul>
+  </section>
 
 <script>
   // Pas hier de knoppen aan: [naam, adres]
@@ -309,6 +369,67 @@
       setOpen(false);
     }
   });
+
+  // News (feeds.json is refreshed every 30 minutes by GitHub Actions)
+  function ago(iso) {
+    if (!iso) return "";
+    const min = Math.round((Date.now() - new Date(iso)) / 60000);
+    if (min < 1) return "zonet";
+    if (min < 60) return min + " min geleden";
+    const h = Math.round(min / 60);
+    if (h < 24) return h + " uur" + " geleden";
+    const d = Math.round(h / 24);
+    return d === 1 ? "gisteren" : d + " dagen geleden";
+  }
+
+  fetch("feeds.json", { cache: "no-cache" })
+    .then(r => r.json())
+    .then(({ feeds }) => {
+      feeds = feeds.filter(f => f.items.length);
+      if (!feeds.length) return;
+      const tabs = document.getElementById("tabs");
+      const stories = document.getElementById("stories");
+      let saved = null;
+      try { saved = localStorage.getItem("omiestart-feed"); } catch {}
+
+      function show(name) {
+        const feed = feeds.find(f => f.name === name) || feeds[0];
+        try { localStorage.setItem("omiestart-feed", feed.name); } catch {}
+        for (const b of tabs.children) b.setAttribute("aria-selected", b.textContent === feed.name);
+        stories.innerHTML = "";
+        for (const item of feed.items) {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = item.link;
+          const thumb = document.createElement("div");
+          thumb.className = "thumb";
+          if (item.image) thumb.style.backgroundImage = `url("${item.image.replace(/"/g, "%22")}")`;
+          const text = document.createElement("div");
+          const title = document.createElement("span");
+          title.className = "title";
+          title.textContent = item.title;
+          const when = document.createElement("span");
+          when.className = "when";
+          when.textContent = ago(item.date);
+          text.append(title, when);
+          a.append(thumb, text);
+          li.append(a);
+          stories.append(li);
+        }
+      }
+
+      for (const f of feeds) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.setAttribute("role", "tab");
+        b.textContent = f.name;
+        b.addEventListener("click", () => show(f.name));
+        tabs.append(b);
+      }
+      show(saved);
+      document.getElementById("news").hidden = false;
+    })
+    .catch(() => {});
 
   input.addEventListener("blur", () => setOpen(false));
   input.addEventListener("focus", () => { if (items.length && input.value) render(); });
