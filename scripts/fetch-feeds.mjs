@@ -1,4 +1,4 @@
-// Fetches Dutch-language Reddit posts and free news feeds, and writes feeds.json next to index.html.
+// Fetches Dutch-language Reddit posts, YouTube videos and free news feeds, and writes feeds.json next to index.html.
 // Runs in GitHub Actions (see .github/workflows/deploy.yml); no dependencies.
 import { writeFile } from "node:fs/promises";
 
@@ -10,8 +10,17 @@ const REDDIT = [
   { subs: "tuinieren+moestuin+kamerplanten+koken+handwerken+zuinig+wandelen+boeken", period: "month" },
 ];
 const PER_SUB = 3;
+// YouTube channel ids (each channel's RSS feed holds its latest 15 videos).
+const YOUTUBE = [
+  "UCYeCOBt1dH21Z_iF_MeAqxg", // VRT Heimwee
+  "UC9VVF4DNqXVxZHmof0S8wmA", // Moesmeisje
+  "UCamND7C4hOfrMdzc4r_AGgQ", // Stadstuinieren
+  "UCduzI04kaKSiiOo_5Ddrq7g", // Omroep MAX
+];
+const PER_CHANNEL = 4;
 const FEEDS = [
   { name: "Reddit", reddit: REDDIT },
+  { name: "Video's", youtube: YOUTUBE },
   // News sites without a paywall.
   { name: "VRT NWS", url: "https://www.vrt.be/vrtnws/nl.rss.articles.xml" },
   { name: "TVL", url: "https://www.tvl.be/rss" },
@@ -87,6 +96,20 @@ for (const feed of FEEDS) {
       }
       items = [];
       for (let i = 0; i < PER_SUB; i++) for (const list of bySub.values()) if (list[i]) items.push(list[i]);
+    } else if (feed.youtube) {
+      // Newest videos first, skipping Shorts, at most a few per channel.
+      items = [];
+      for (const id of feed.youtube) {
+        const res = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${id}`, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) });
+        if (!res.ok) { console.error(`YouTube ${id}: HTTP ${res.status}`); continue; }
+        const xml = await res.text();
+        const channel = tag(xml, "name").split(":")[0]; // "Moesmeisje: tips voor ..." -> "Moesmeisje"
+        items.push(...parse(xml)
+          .filter(v => !v.link.includes("/shorts/"))
+          .slice(0, PER_CHANNEL)
+          .map(v => ({ ...v, source: channel, image: `https://i.ytimg.com/vi/${new URL(v.link).searchParams.get("v")}/hqdefault.jpg` })));
+      }
+      items.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     } else {
       const res = await fetch(feed.url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
