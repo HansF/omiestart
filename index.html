@@ -62,20 +62,18 @@
   #today { font-size: 1.2rem; color: var(--muted); }
   #today .dot { margin: 0 10px; opacity: .5; }
   .weather {
+    position: absolute;
+    top: 16px;
+    right: 20px;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    margin-top: 18px;
-    padding: 8px 20px 8px 14px;
-    background: var(--card);
-    border-radius: 999px;
-    box-shadow: var(--shadow);
-    font-size: 1.1rem;
+    gap: 8px;
+    font-size: .95rem;
     color: var(--muted);
   }
   .weather[hidden] { display: none; }
-  .weather .emoji { font-size: 1.7rem; line-height: 1; }
-  .weather .temp { font-size: 1.5rem; font-weight: 600; color: var(--text); }
+  .weather .emoji { font-size: 1.25rem; line-height: 1; }
+  .weather .temp { font-size: 1.1rem; font-weight: 600; color: var(--text); }
 
   /* Search */
   .search { position: relative; width: 100%; max-width: 640px; margin-bottom: 48px; }
@@ -223,6 +221,7 @@
 
   @media (max-width: 520px) {
     body { padding-top: 6vh; }
+    .weather { position: static; margin-bottom: 20px; }
     .grid { gap: 12px; }
     .tile { width: calc(50% - 6px); }
     .stories .thumb { width: 84px; height: 60px; }
@@ -231,10 +230,11 @@
 </style>
 </head>
 <body>
+  <div class="weather" id="weather" hidden></div>
+
   <header>
     <h1 id="greeting">Dag omie!</h1>
     <div id="today"><span id="date"></span><span class="dot">&bull;</span><span id="clock"></span></div>
-    <div class="weather" id="weather" hidden></div>
   </header>
 
   <div class="search" id="search">
@@ -304,7 +304,7 @@
   setInterval(tick, 10000);
 
   // Weather (Open-Meteo, no key needed)
-  const PLACE = { name: "Hasselt", lat: 50.93, lon: 5.34 };
+  const PLACE = { name: "Houthalen", lat: 51.03, lon: 5.37 };
   const WEATHER = [
     [[0], "☀️", "🌙", "Zonnig"],
     [[1, 2], "⛅", "☁️", "Licht bewolkt"],
@@ -327,10 +327,11 @@
         const [, dayIcon, nightIcon, label] = WEATHER.find(([codes]) => codes.includes(current.weather_code)) || [, "🌡️", "🌡️", ""];
         const rain = daily.precipitation_probability_max[0];
         const parts = [
+          PLACE.name,
           label,
-          Math.round(daily.temperature_2m_min[0]) + "° tot " + Math.round(daily.temperature_2m_max[0]) + "°",
+          Math.round(daily.temperature_2m_min[0]) + "° – " + Math.round(daily.temperature_2m_max[0]) + "°",
         ];
-        if (rain >= 30) parts.push(rain + "% kans op regen");
+        if (rain >= 30) parts.push(rain + "% regen");
         const el = document.getElementById("weather");
         el.innerHTML = "";
         const emoji = document.createElement("span");
