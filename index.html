@@ -475,7 +475,7 @@
           title.textContent = item.title;
           const when = document.createElement("span");
           when.className = "when";
-          when.textContent = ago(item.date);
+          when.textContent = [item.source, ago(item.date)].filter(Boolean).join(" · ");
           text.append(title, when);
           a.append(thumb, text);
           li.append(a);
