@@ -111,7 +111,8 @@ for (const feed of FEEDS) {
     if (feed.reddit) {
       const bySub = new Map();
       for (const group of feed.reddit) {
-        for (const item of parse(await fetchReddit(group))) {
+        // Skip text-only posts: they show up as an empty box.
+        for (const item of parse(await fetchReddit(group)).filter(i => i.image)) {
           const list = bySub.get(item.category) || [];
           if (list.length < PER_SUB) list.push({ ...item, source: "r/" + item.category });
           bySub.set(item.category, list);
