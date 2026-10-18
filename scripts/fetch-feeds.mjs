@@ -1,4 +1,5 @@
-// Fetches Dutch-language Reddit posts, YouTube videos and free news feeds, and writes feeds.json next to index.html.
+// Fetches Dutch-language Reddit posts, YouTube videos, SeniorenNet forum posts
+// and free news feeds, and writes feeds.json next to index.html.
 // Runs in GitHub Actions (see .github/workflows/deploy.yml); no dependencies.
 import { writeFile } from "node:fs/promises";
 
@@ -6,7 +7,9 @@ import { writeFile } from "node:fs/promises";
 // Busy subreddits are fetched separately so they don't crowd out the quiet ones,
 // which use a longer period so there is enough to read.
 const REDDIT = [
-  { subs: "katten+Klussers", period: "week" },
+  { subs: "katten+Klussers+GroeneVingers", period: "week" },
+  // English, but mostly pictures.
+  { subs: "Eyebleach+Jigsawpuzzles+OldPhotosInRealLife", period: "week" },
   { subs: "tuinieren+moestuin+kamerplanten+koken+handwerken+zuinig+wandelen+boeken", period: "month" },
 ];
 const PER_SUB = 3;
@@ -24,9 +27,23 @@ const YOUTUBE = [
   "UCB0gz41oH3LOmGIX1EODvCA", // VRT MAX
 ];
 const PER_CHANNEL = 3;
+// Calm SeniorenNet subforums (no politics or news), as phpBB forum ids.
+const SENIORENNET = [
+  1, // Seniorennet Café
+  32, // Tuin, vijver & groen
+  17, // Eten en drinken
+  13, // Gezonde levenswijze
+  24, // Cultuur en historie
+  62, // Plaatjesmagazijn en fotoalbums
+  47, // Poëzie en proza
+  44, // Columns & kolder
+  30, // Wonen & Zorg
+];
+const FORUM_TOPICS = 12;
 const FEEDS = [
   { name: "Reddit", reddit: REDDIT },
   { name: "Video's", youtube: YOUTUBE },
+  { name: "SeniorenNet", forums: SENIORENNET },
   // News sites without a paywall.
   { name: "VRT NWS", url: "https://www.vrt.be/vrtnws/nl.rss.articles.xml" },
   { name: "TVL", url: "https://www.tvl.be/rss" },
@@ -116,6 +133,24 @@ for (const feed of FEEDS) {
           .map(v => ({ ...v, source: channel, image: `https://i.ytimg.com/vi/${new URL(v.link).searchParams.get("v")}/hqdefault.jpg` })));
       }
       items.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    } else if (feed.forums) {
+      // Each feed lists the latest posts; keep only the newest post per topic.
+      const topics = new Map();
+      for (const id of feed.forums) {
+        const res = await fetch(`https://www.seniorennet.be/forum/feed/forum/${id}`, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) });
+        if (!res.ok) { console.error(`SeniorenNet ${id}: HTTP ${res.status}`); continue; }
+        for (const b of (await res.text()).match(/<entry>[\s\S]*?<\/entry>/g) || []) {
+          const link = attr(b, /<link[^>]*>/i, "href");
+          const topic = new URL(link).searchParams.get("t");
+          const date = new Date(tag(b, "updated")).toISOString();
+          if (topics.has(topic) && topics.get(topic).date >= date) continue;
+          // Title is "Forum • Re: Topic"; the post's first picture becomes the thumbnail.
+          const [source, title] = tag(b, "title").split(" • ");
+          const img = (b.match(/<img src="([^"]+)" class="postimage"/) || [])[1];
+          topics.set(topic, { title: title.replace(/^Re: /, ""), link, image: img ? decode(img) : "", date, source });
+        }
+      }
+      items = [...topics.values()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, FORUM_TOPICS);
     } else {
       const res = await fetch(feed.url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
