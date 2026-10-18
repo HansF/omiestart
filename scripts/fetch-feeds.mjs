@@ -16,6 +16,8 @@ const YOUTUBE = [
   "UC9VVF4DNqXVxZHmof0S8wmA", // Moesmeisje
   "UCamND7C4hOfrMdzc4r_AGgQ", // Stadstuinieren
   "UCduzI04kaKSiiOo_5Ddrq7g", // Omroep MAX
+  "UCLgF_LhuA5c26UdU51Pel5Q", // Verzonken Glorie
+  "UCgxM87t7JZF60Z37CQbMaYA", // De Ideale Wereld
 ];
 const PER_CHANNEL = 4;
 const FEEDS = [
