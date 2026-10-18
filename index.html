@@ -5,103 +5,178 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Omiestart</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌷</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f1ea;
+    --bg: #f7f2eb;
+    --bg-glow: #fdf9f4;
     --card: #ffffff;
-    --text: #2b2622;
-    --muted: #6f655c;
-    --accent: #c0583c;
-    --ring: #e3d8cb;
+    --text: #2a2420;
+    --muted: #7a6e64;
+    --accent: #b8553a;
+    --accent-soft: #f6e6df;
+    --line: #e8dfd4;
+    --shadow: 0 1px 2px rgba(60, 40, 20, .05), 0 4px 14px rgba(60, 40, 20, .06);
+    --shadow-hover: 0 2px 4px rgba(60, 40, 20, .06), 0 10px 24px rgba(60, 40, 20, .10);
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1d1916;
+      --bg-glow: #26211d;
+      --card: #2a2420;
+      --text: #f2ebe3;
+      --muted: #a89c91;
+      --accent: #e2876b;
+      --accent-soft: #3a2b25;
+      --line: #3a322c;
+      --shadow: 0 1px 2px rgba(0,0,0,.3);
+      --shadow-hover: 0 6px 20px rgba(0,0,0,.4);
+    }
+  }
+
   * { box-sizing: border-box; }
+  html { font-size: 17px; }
   body {
     margin: 0;
     min-height: 100vh;
-    background: var(--bg);
+    background: radial-gradient(ellipse at top, var(--bg-glow), var(--bg) 60%) fixed;
     color: var(--text);
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 48px 16px;
+    padding: 9vh 16px 48px;
   }
-  header { text-align: center; margin-bottom: 32px; }
-  #greeting { font-size: 2.6rem; font-weight: 600; margin: 0; }
-  #date { font-size: 1.4rem; color: var(--muted); margin-top: 8px; }
-  #clock { font-size: 1.4rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-  form { width: 100%; max-width: 720px; margin-bottom: 44px; display: flex; gap: 10px; }
-  form input {
-    flex: 1;
-    font-size: 1.4rem;
-    padding: 18px 24px;
-    border: 2px solid var(--ring);
-    border-radius: 999px;
+  /* Greeting */
+  header { text-align: center; margin-bottom: 36px; }
+  #greeting {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+  }
+  #today { font-size: 1.2rem; color: var(--muted); }
+  #today .dot { margin: 0 10px; opacity: .5; }
+
+  /* Search */
+  .search { position: relative; width: 100%; max-width: 640px; margin-bottom: 48px; }
+  .search form {
+    display: flex;
+    align-items: center;
     background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search form:focus-within { border-color: var(--accent); box-shadow: var(--shadow-hover); }
+  .search.open form { border-radius: 30px 30px 0 0; border-bottom-color: var(--line); }
+  .search svg { flex: none; width: 24px; height: 24px; margin-left: 22px; color: var(--muted); }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-size: 1.25rem;
+    padding: 17px 22px 17px 14px;
+    border: 0;
+    background: transparent;
     color: var(--text);
     outline: none;
   }
-  form input:focus { border-color: var(--accent); }
-  form button {
-    font-size: 1.3rem;
-    padding: 0 28px;
-    border: 0;
-    border-radius: 999px;
-    background: var(--accent);
-    color: #fff;
+  .search input::placeholder { color: var(--muted); }
+
+  #suggestions {
+    position: absolute;
+    left: 0; right: 0; top: 100%;
+    z-index: 10;
+    margin: 0;
+    padding: 6px 0 10px;
+    list-style: none;
+    background: var(--card);
+    border: 2px solid var(--accent);
+    border-top: 0;
+    border-radius: 0 0 30px 30px;
+    box-shadow: var(--shadow-hover);
+  }
+  #suggestions[hidden] { display: none; }
+  #suggestions li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 11px 24px;
+    font-size: 1.15rem;
     cursor: pointer;
   }
+  #suggestions li svg { width: 18px; height: 18px; margin: 0; color: var(--muted); flex: none; }
+  #suggestions li.active, #suggestions li:hover { background: var(--accent-soft); }
+  #suggestions b { font-weight: 600; }
 
+  /* Tiles */
   .grid {
-    width: 100%;
-    max-width: 1100px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    max-width: 920px;
   }
   .tile {
+    width: 136px;
+    padding: 20px 10px 16px;
     background: var(--card);
     border: 2px solid transparent;
-    border-radius: 20px;
-    padding: 26px 12px 20px;
-    text-decoration: none;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
     color: var(--text);
+    text-decoration: none;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.06);
-    transition: transform .12s, border-color .12s;
+    gap: 12px;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
   }
-  .tile:hover, .tile:focus { transform: translateY(-3px); border-color: var(--accent); outline: none; }
-  .tile img, .tile .letter {
-    width: 64px; height: 64px; border-radius: 14px;
+  .tile:hover, .tile:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--accent);
+    outline: none;
   }
-  .tile .letter {
+  .icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: var(--accent-soft);
     display: flex; align-items: center; justify-content: center;
-    background: var(--accent); color: #fff; font-size: 2rem; font-weight: 700;
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.5rem; font-weight: 600; color: var(--accent);
+    overflow: hidden;
   }
-  .tile span { font-size: 1.25rem; font-weight: 500; text-align: center; }
+  .icon img { width: 34px; height: 34px; }
+  .tile span { font-size: 1.05rem; font-weight: 600; text-align: center; line-height: 1.25; }
 
-  @media (max-width: 500px) {
-    #greeting { font-size: 2rem; }
-    .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    form button { padding: 0 18px; }
+  @media (max-width: 520px) {
+    body { padding-top: 6vh; }
+    .grid { gap: 12px; }
+    .tile { width: calc(50% - 6px); }
   }
 </style>
 </head>
 <body>
   <header>
     <h1 id="greeting">Dag omie!</h1>
-    <div id="date"></div>
-    <div id="clock"></div>
+    <div id="today"><span id="date"></span><span class="dot">•</span><span id="clock"></span></div>
   </header>
 
-  <form action="https://www.google.com/search" method="get">
-    <input name="q" placeholder="Zoek op Google…" autofocus autocomplete="off">
-    <button type="submit">Zoek</button>
-  </form>
+  <div class="search" id="search">
+    <form action="https://www.google.com/search" method="get" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" name="q" placeholder="Wat wil je opzoeken?" autofocus autocomplete="off"
+             role="combobox" aria-expanded="false" aria-controls="suggestions" aria-autocomplete="list">
+    </form>
+    <ul id="suggestions" role="listbox" hidden></ul>
+  </div>
 
   <main class="grid" id="links"></main>
 
@@ -121,37 +196,123 @@
     ["Delhaize", "https://www.delhaize.be/nl"],
   ];
 
+  // Tiles
   const grid = document.getElementById("links");
   for (const [name, url] of LINKS) {
     const a = document.createElement("a");
     a.className = "tile";
     a.href = url;
+    const icon = document.createElement("div");
+    icon.className = "icon";
     const img = document.createElement("img");
     img.alt = "";
     img.src = "https://www.google.com/s2/favicons?sz=128&domain_url=" + encodeURIComponent(url);
-    img.onerror = () => {
-      const letter = document.createElement("div");
-      letter.className = "letter";
-      letter.textContent = name[0].toUpperCase();
-      img.replaceWith(letter);
-    };
+    img.onerror = () => { icon.textContent = name[0].toUpperCase(); };
+    icon.append(img);
     const label = document.createElement("span");
     label.textContent = name;
-    a.append(img, label);
+    a.append(icon, label);
     grid.append(a);
   }
 
+  // Greeting, date and clock
   function tick() {
     const now = new Date();
     const h = now.getHours();
-    const part = h < 12 ? "Goeiemorgen" : h < 18 ? "Goeiemiddag" : "Goeieavond";
+    const part = h < 6 ? "Goeienacht" : h < 12 ? "Goeiemorgen" : h < 18 ? "Goeiemiddag" : "Goeieavond";
     document.getElementById("greeting").textContent = part + ", omie!";
-    const date = now.toLocaleDateString("nl-BE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    const date = now.toLocaleDateString("nl-BE", { weekday: "long", day: "numeric", month: "long" });
     document.getElementById("date").textContent = date[0].toUpperCase() + date.slice(1);
     document.getElementById("clock").textContent = now.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
   }
   tick();
   setInterval(tick, 10000);
+
+  // Search suggestions (Google suggest via JSONP)
+  const box = document.getElementById("search");
+  const form = box.querySelector("form");
+  const input = document.getElementById("q");
+  const list = document.getElementById("suggestions");
+  const searchIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+  let items = [], active = -1, typed = "", requestId = 0, timer;
+
+  function setOpen(open) {
+    list.hidden = !open;
+    box.classList.toggle("open", open);
+    input.setAttribute("aria-expanded", open);
+  }
+
+  function render() {
+    list.innerHTML = "";
+    items.forEach((text, i) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.className = i === active ? "active" : "";
+      const rest = text.toLowerCase().startsWith(typed.toLowerCase()) ? text.slice(typed.length) : null;
+      li.innerHTML = searchIcon;
+      const span = document.createElement("span");
+      if (rest !== null) {
+        span.append(text.slice(0, typed.length));
+        const b = document.createElement("b");
+        b.textContent = rest;
+        span.append(b);
+      } else {
+        span.textContent = text;
+      }
+      li.append(span);
+      li.addEventListener("mousedown", e => { e.preventDefault(); go(text); });
+      list.append(li);
+    });
+    setOpen(items.length > 0);
+  }
+
+  function go(text) {
+    input.value = text;
+    setOpen(false);
+    form.submit();
+  }
+
+  function fetchSuggestions(q) {
+    const id = ++requestId;
+    const cb = "omieSuggest" + id;
+    const script = document.createElement("script");
+    window[cb] = data => {
+      delete window[cb];
+      script.remove();
+      if (id !== requestId) return;
+      items = (data[1] || []).slice(0, 7);
+      active = -1;
+      render();
+    };
+    script.onerror = () => { delete window[cb]; script.remove(); };
+    script.src = "https://suggestqueries.google.com/complete/search?client=chrome&hl=nl&gl=be&ie=utf-8&oe=utf-8&q="
+      + encodeURIComponent(q) + "&callback=" + cb;
+    document.head.append(script);
+  }
+
+  input.addEventListener("input", () => {
+    typed = input.value;
+    clearTimeout(timer);
+    if (!typed.trim()) { requestId++; items = []; setOpen(false); return; }
+    timer = setTimeout(() => fetchSuggestions(typed), 120);
+  });
+
+  input.addEventListener("keydown", e => {
+    if (list.hidden) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const n = items.length + 1; // -1 = what was typed
+      active = ((active + 1 + (e.key === "ArrowDown" ? 1 : -1) + n) % n) - 1;
+      input.value = active === -1 ? typed : items[active];
+      render();
+    } else if (e.key === "Escape") {
+      input.value = typed;
+      setOpen(false);
+    }
+  });
+
+  input.addEventListener("blur", () => setOpen(false));
+  input.addEventListener("focus", () => { if (items.length && input.value) render(); });
 </script>
 </body>
 </html>
