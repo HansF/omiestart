@@ -190,6 +190,9 @@
     gap: 16px;
     max-width: 920px;
   }
+  .games { margin-top: 48px; text-align: center; }
+  .games h2 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.8rem; margin: 0 0 16px; }
+  .icon.emoji { font-size: 2rem; }
   .tile {
     width: 136px;
     padding: 20px 10px 16px;
@@ -326,6 +329,11 @@
 
   <main class="grid" id="links"></main>
 
+  <section class="games">
+    <h2>Spelletjes</h2>
+    <div class="grid" id="games"></div>
+  </section>
+
   <section class="news" id="news" hidden>
     <div class="news-head">
       <h2>Leuk om te lezen</h2>
@@ -370,24 +378,40 @@
     ["Delhaize", "https://www.delhaize.be/nl"],
   ];
 
-  // Tiles
-  const grid = document.getElementById("links");
-  for (const [name, url] of LINKS) {
-    const a = document.createElement("a");
-    a.className = "tile";
-    a.href = url;
-    const icon = document.createElement("div");
-    icon.className = "icon";
-    const img = document.createElement("img");
-    img.alt = "";
-    img.src = "https://www.google.com/s2/favicons?sz=128&domain_url=" + encodeURIComponent(url);
-    img.onerror = () => { icon.textContent = name[0].toUpperCase(); };
-    icon.append(img);
-    const label = document.createElement("span");
-    label.textContent = name;
-    a.append(icon, label);
-    grid.append(a);
+  // Spelletjes: [naam, adres, icoon]
+  const GAMES = [
+    ["Woordle", "https://woordle.nl/", "🔤"],
+    ["Sudoku", "https://www.websudoku.com/", "🔢"],
+    ["Legpuzzels", "https://www.jigsawplanet.com/", "🧩"],
+    ["Mahjong", "https://www.mahjong.nl/", "🀄"],
+  ];
+
+  // Tiles: the site's own icon, or an emoji when one is given
+  function addTiles(grid, list) {
+    for (const [name, url, emoji] of list) {
+      const a = document.createElement("a");
+      a.className = "tile";
+      a.href = url;
+      const icon = document.createElement("div");
+      icon.className = "icon";
+      if (emoji) {
+        icon.classList.add("emoji");
+        icon.textContent = emoji;
+      } else {
+        const img = document.createElement("img");
+        img.alt = "";
+        img.src = "https://www.google.com/s2/favicons?sz=128&domain_url=" + encodeURIComponent(url);
+        img.onerror = () => { icon.textContent = name[0].toUpperCase(); };
+        icon.append(img);
+      }
+      const label = document.createElement("span");
+      label.textContent = name;
+      a.append(icon, label);
+      grid.append(a);
+    }
   }
+  addTiles(document.getElementById("links"), LINKS);
+  addTiles(document.getElementById("games"), GAMES);
 
   // Special days: her birthday and Mother's Day (second Sunday of May).
   // Add ?datum=2026-12-13 to the address to preview a day.
