@@ -118,17 +118,25 @@
 
   /* Waste collection reminder */
   .afval {
-    display: flex; align-items: center; gap: 16px;
-    width: 100%; max-width: 640px;
-    margin: 0 0 28px; padding: 16px 22px;
+    position: absolute;
+    top: 12px;
+    left: 20px;
+    display: flex; align-items: center; gap: 12px;
+    max-width: 320px;
+    padding: 10px 16px;
     background: #fff4d6; color: #5a4100;
-    border: 2px solid #f0b429; border-radius: 18px;
+    border: 2px solid #f0b429; border-radius: 14px;
     box-shadow: var(--shadow);
-    font-size: 1.2rem; line-height: 1.4;
+    font-size: .95rem; line-height: 1.35;
   }
   .afval[hidden] { display: none; }
-  .afval .bin { font-size: 2.4rem; flex: none; }
-  .afval b { display: block; font-size: 1.3rem; }
+  .afval .bin { font-size: 1.8rem; flex: none; }
+  .afval b { display: block; font-size: 1.05rem; }
+  body.party .afval { top: 64px; }
+  /* Not enough room beside the greeting: show it below instead. */
+  @media (max-width: 1100px) {
+    .afval { position: static; max-width: 560px; width: 100%; margin-bottom: 24px; }
+  }
   @media (prefers-color-scheme: dark) {
     .afval { background: #3a2f12; color: #fbe3a1; border-color: #b8860b; }
   }
@@ -317,8 +325,7 @@
 
   @media (max-width: 520px) {
     body { padding-top: 6vh; }
-    .weather { position: static; margin-bottom: 20px; }
-    .grid { gap: 12px; }
+    .weather { position: static; margin-bottom: 20px; }    .grid { gap: 12px; }
     .tile { width: calc(50% - 6px); }
     .stories .thumb { width: 84px; height: 60px; }
     .stories a { gap: 14px; }
