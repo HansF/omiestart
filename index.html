@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>Omistart</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127799;</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,6 +61,8 @@
     margin: 0 0 10px;
   }
   #today { font-size: 1.2rem; color: var(--muted); }
+  #festive { font-size: 2.6rem; letter-spacing: .2em; margin-bottom: 8px; }
+  #festive[hidden] { display: none; }
   #today .dot { margin: 0 10px; opacity: .5; }
   .weather {
     position: absolute;
@@ -255,6 +258,7 @@
   <div class="weather" id="weather" hidden></div>
 
   <header>
+    <div id="festive" aria-hidden="true" hidden></div>
     <h1 id="greeting">Dag Omi!</h1>
     <div id="today"><span id="date"></span><span class="dot">&bull;</span><span id="clock"></span></div>
   </header>
@@ -333,12 +337,26 @@
     grid.append(a);
   }
 
+  // Special days: her birthday and Mother's Day (second Sunday of May).
+  // Add ?datum=2026-12-13 to the address to preview a day.
+  function occasion(d) {
+    if (d.getMonth() === 11 && d.getDate() === 13) return ["Fijne Verjaardag, Mamma!", "🎂🎈🎉"];
+    if (d.getMonth() === 4 && d.getDay() === 0 && d.getDate() >= 8 && d.getDate() <= 14) return ["Fijne Moederdag, Mamma!", "💐❤️🌷"];
+    return null;
+  }
+  const preview = new URLSearchParams(location.search).get("datum");
+
   // Greeting, date and clock
   function tick() {
     const now = new Date();
+    const day = preview ? new Date(preview + "T12:00") : now;
     const h = now.getHours();
     const part = h < 6 ? "Goeienacht" : h < 12 ? "Goeiemorgen" : h < 18 ? "Goeiemiddag" : "Goeieavond";
-    document.getElementById("greeting").textContent = part + ", Omi!";
+    const special = occasion(day);
+    document.getElementById("greeting").textContent = special ? special[0] : part + ", Omi!";
+    const festive = document.getElementById("festive");
+    festive.textContent = special ? special[1] : "";
+    festive.hidden = !special;
     const date = now.toLocaleDateString("nl-BE", { weekday: "long", day: "numeric", month: "long" });
     document.getElementById("date").textContent = date[0].toUpperCase() + date.slice(1);
     document.getElementById("clock").textContent = now.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
