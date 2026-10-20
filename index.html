@@ -61,8 +61,59 @@
     margin: 0 0 10px;
   }
   #today { font-size: 1.2rem; color: var(--muted); }
-  #festive { font-size: 2.6rem; letter-spacing: .2em; margin-bottom: 8px; }
-  #festive[hidden] { display: none; }
+  #festive { font-size: 3.4rem; margin-bottom: 8px; }
+  #festive[hidden], #festive-sub[hidden] { display: none; }
+  #festive span { display: inline-block; margin: 0 .12em; animation: hop 1.4s ease-in-out infinite; }
+  #festive span:nth-child(2) { animation-delay: .2s; }
+  #festive span:nth-child(3) { animation-delay: .4s; }
+  #festive span:nth-child(4) { animation-delay: .6s; }
+  #festive span:nth-child(5) { animation-delay: .8s; }
+  #festive-sub { font-family: "Fraunces", Georgia, serif; font-size: 1.5rem; font-weight: 500; margin: 0 0 12px; color: var(--party-1); }
+
+  /* Party days (birthday, Mother's Day) */
+  body.party { --party-1: #d6336c; --party-2: #f59f00; --party-3: #7048e8; }
+  body.moederdag { --party-1: #d6336c; --party-2: #f783ac; --party-3: #e64980; }
+  body.party {
+    background:
+      radial-gradient(circle at 15% 20%, color-mix(in srgb, var(--party-2) 22%, transparent), transparent 40%),
+      radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--party-1) 18%, transparent), transparent 45%),
+      radial-gradient(circle at 50% 90%, color-mix(in srgb, var(--party-3) 14%, transparent), transparent 50%),
+      radial-gradient(ellipse at top, var(--bg-glow), var(--bg) 60%) fixed;
+  }
+  body.party #greeting {
+    font-size: clamp(2.6rem, 7vw, 4.6rem);
+    background: linear-gradient(90deg, var(--party-1), var(--party-2), var(--party-3), var(--party-1));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 6s linear infinite, wobble 3s ease-in-out infinite;
+    cursor: pointer;
+  }
+  body.party .weather { top: 64px; }
+  .bunting { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; justify-content: space-around; pointer-events: none; z-index: 5; }
+  .bunting::before { content: ""; position: absolute; top: 6px; left: 0; right: 0; border-top: 2px solid color-mix(in srgb, var(--text) 30%, transparent); }
+  .bunting i { width: 34px; height: 44px; margin-top: 6px; clip-path: polygon(0 0, 100% 0, 50% 100%); transform-origin: top center; animation: sway 2.4s ease-in-out infinite; }
+  .bunting i:nth-child(3n+1) { background: var(--party-1); }
+  .bunting i:nth-child(3n+2) { background: var(--party-2); animation-delay: .4s; }
+  .bunting i:nth-child(3n) { background: var(--party-3); animation-delay: .8s; }
+  .sky { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 4; }
+  .sky span { position: absolute; top: -10vh; will-change: transform; animation: fall linear infinite; }
+  .sky .confetti { width: 10px; height: 16px; border-radius: 2px; }
+  .sky .balloon { top: auto; bottom: -20vh; font-size: 3.4rem; animation-name: rise; }
+  .sky .burst { width: 12px; height: 12px; border-radius: 3px; animation: burst 1.6s cubic-bezier(.2,.7,.4,1) forwards; }
+
+  @keyframes hop { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-14px) rotate(-8deg); } }
+  @keyframes shimmer { to { background-position: 300% 0; } }
+  @keyframes wobble { 0%, 100% { transform: rotate(-1.5deg) scale(1); } 50% { transform: rotate(1.5deg) scale(1.04); } }
+  @keyframes sway { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+  @keyframes fall { to { transform: translate(var(--drift), 120vh) rotate(var(--spin)); } }
+  @keyframes rise { to { transform: translate(var(--drift), -140vh) rotate(var(--spin)); } }
+  @keyframes burst { to { transform: translate(var(--x), var(--y)) rotate(var(--spin)); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .bunting i, #festive span, body.party #greeting { animation: none !important; }
+    .sky { display: none; }
+  }
   #today .dot { margin: 0 10px; opacity: .5; }
   .weather {
     position: absolute;
@@ -260,6 +311,7 @@
   <header>
     <div id="festive" aria-hidden="true" hidden></div>
     <h1 id="greeting">Dag Omi!</h1>
+    <p id="festive-sub" hidden></p>
     <div id="today"><span id="date"></span><span class="dot">&bull;</span><span id="clock"></span></div>
   </header>
 
@@ -339,24 +391,111 @@
 
   // Special days: her birthday and Mother's Day (second Sunday of May).
   // Add ?datum=2026-12-13 to the address to preview a day.
+  const OCCASIONS = {
+    verjaardag: {
+      greeting: "Fijne Verjaardag, Mamma!",
+      sub: "Van harte gefeliciteerd! Een dikke knuffel van ons allemaal 🥳",
+      emoji: ["🎂", "🎈", "🎉", "🎁", "🥳"],
+      falling: ["🎉", "✨", "⭐", "🎊"],
+      rising: ["🎈", "🎈", "🎈", "🎁"],
+    },
+    moederdag: {
+      greeting: "Fijne Moederdag, Mamma!",
+      sub: "De liefste mama van de hele wereld 💖",
+      emoji: ["💐", "❤️", "🌷", "💖", "🌸"],
+      falling: ["🌸", "🌷", "💖", "❤️", "🌹", "💐"],
+      rising: ["💖", "❤️", "💕"],
+    },
+  };
   function occasion(d) {
-    if (d.getMonth() === 11 && d.getDate() === 13) return ["Fijne Verjaardag, Mamma!", "🎂🎈🎉"];
-    if (d.getMonth() === 4 && d.getDay() === 0 && d.getDate() >= 8 && d.getDate() <= 14) return ["Fijne Moederdag, Mamma!", "💐❤️🌷"];
+    if (d.getMonth() === 11 && d.getDate() === 13) return "verjaardag";
+    if (d.getMonth() === 4 && d.getDay() === 0 && d.getDate() >= 8 && d.getDate() <= 14) return "moederdag";
     return null;
   }
   const preview = new URLSearchParams(location.search).get("datum");
+  const party = occasion(preview ? new Date(preview + "T12:00") : new Date());
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = list => list[Math.floor(Math.random() * list.length)];
+
+  function startParty(name) {
+    const o = OCCASIONS[name];
+    document.body.classList.add("party", name);
+    const festive = document.getElementById("festive");
+    for (const e of o.emoji) festive.append(Object.assign(document.createElement("span"), { textContent: e }));
+    festive.hidden = false;
+    const sub = document.getElementById("festive-sub");
+    sub.textContent = o.sub;
+    sub.hidden = false;
+
+    const bunting = document.createElement("div");
+    bunting.className = "bunting";
+    for (let i = 0; i < Math.ceil(innerWidth / 48); i++) bunting.append(document.createElement("i"));
+    document.body.prepend(bunting);
+
+    // Confetti or petals falling, balloons or hearts rising.
+    const sky = document.createElement("div");
+    sky.className = "sky";
+    const colors = ["var(--party-1)", "var(--party-2)", "var(--party-3)"];
+    for (let i = 0; i < 46; i++) {
+      const s = document.createElement("span");
+      if (name === "verjaardag" && i % 2) {
+        s.className = "confetti";
+        s.style.background = pick(colors);
+      } else {
+        s.textContent = pick(o.falling);
+        s.style.fontSize = rand(1.2, 2.4) + "rem";
+      }
+      s.style.left = rand(0, 100) + "vw";
+      s.style.animationDuration = rand(7, 15) + "s";
+      s.style.animationDelay = -rand(0, 15) + "s";
+      s.style.setProperty("--drift", rand(-20, 20) + "vw");
+      s.style.setProperty("--spin", rand(-720, 720) + "deg");
+      sky.append(s);
+    }
+    for (let i = 0; i < 9; i++) {
+      const b = document.createElement("span");
+      b.className = "balloon";
+      b.textContent = pick(o.rising);
+      b.style.left = rand(0, 92) + "vw";
+      b.style.animationDuration = rand(12, 20) + "s";
+      b.style.animationDelay = -rand(0, 20) + "s";
+      b.style.setProperty("--drift", rand(-10, 10) + "vw");
+      b.style.setProperty("--spin", rand(-20, 20) + "deg");
+      sky.append(b);
+    }
+    document.body.append(sky);
+
+    // A confetti burst at the start and whenever the greeting is clicked.
+    function burst(x, y) {
+      for (let i = 0; i < 70; i++) {
+        const c = document.createElement("span");
+        c.className = "burst";
+        c.style.left = x + "px";
+        c.style.top = y + "px";
+        c.style.background = pick(colors);
+        const angle = rand(0, Math.PI * 2), dist = rand(80, 360);
+        c.style.setProperty("--x", Math.cos(angle) * dist + "px");
+        c.style.setProperty("--y", Math.sin(angle) * dist + rand(60, 200) + "px");
+        c.style.setProperty("--spin", rand(-720, 720) + "deg");
+        c.addEventListener("animationend", () => c.remove());
+        sky.append(c);
+      }
+    }
+    const greeting = document.getElementById("greeting");
+    const center = () => { const r = greeting.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+    greeting.addEventListener("click", () => burst(...center()));
+    setTimeout(() => burst(...center()), 400);
+    setTimeout(() => burst(innerWidth * .2, innerHeight * .3), 900);
+    setTimeout(() => burst(innerWidth * .8, innerHeight * .3), 1300);
+  }
+  if (party) startParty(party);
 
   // Greeting, date and clock
   function tick() {
     const now = new Date();
-    const day = preview ? new Date(preview + "T12:00") : now;
     const h = now.getHours();
     const part = h < 6 ? "Goeienacht" : h < 12 ? "Goeiemorgen" : h < 18 ? "Goeiemiddag" : "Goeieavond";
-    const special = occasion(day);
-    document.getElementById("greeting").textContent = special ? special[0] : part + ", Omi!";
-    const festive = document.getElementById("festive");
-    festive.textContent = special ? special[1] : "";
-    festive.hidden = !special;
+    document.getElementById("greeting").textContent = party ? OCCASIONS[party].greeting : part + ", Omi!";
     const date = now.toLocaleDateString("nl-BE", { weekday: "long", day: "numeric", month: "long" });
     document.getElementById("date").textContent = date[0].toUpperCase() + date.slice(1);
     document.getElementById("clock").textContent = now.toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" });
