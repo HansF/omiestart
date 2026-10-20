@@ -28,6 +28,8 @@ jobs:
         with:
           node-version: 22
       - run: node scripts/fetch-feeds.mjs
+        env:
+          AFVAL_URL: ${{ secrets.AFVAL_URL }}
       - run: mkdir _site && cp index.html feeds.json robots.txt _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

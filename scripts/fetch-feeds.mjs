@@ -167,4 +167,24 @@ for (const feed of FEEDS) {
   }
 }
 
+// Waste collection days from Limburg.net. The calendar link contains the home
+// address, so it comes from the AFVAL_URL secret and only the dates are published.
+if (process.env.AFVAL_URL) {
+  try {
+    const res = await fetch(process.env.AFVAL_URL, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(20000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const days = new Map();
+    for (const ev of (await res.text()).match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g) || []) {
+      const d = (ev.match(/DTSTART[^:]*:(\d{4})(\d{2})(\d{2})/) || []).slice(1).join("-");
+      const what = (ev.match(/SUMMARY:(.*)/) || [])[1]?.trim();
+      if (d && what) days.set(d, [...(days.get(d) || []), what]);
+    }
+    const yesterday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    result.afval = [...days].filter(([d]) => d >= yesterday).sort().slice(0, 10).map(([date, types]) => ({ date, types }));
+    console.log(`Afval: ${result.afval.length} days`);
+  } catch (err) {
+    console.error(`Afval: ${err.message}`);
+  }
+}
+
 await writeFile(new URL("../feeds.json", import.meta.url), JSON.stringify(result, null, 1));

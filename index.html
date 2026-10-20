@@ -115,6 +115,23 @@
     .sky { display: none; }
   }
   #today .dot { margin: 0 10px; opacity: .5; }
+
+  /* Waste collection reminder */
+  .afval {
+    display: flex; align-items: center; gap: 16px;
+    width: 100%; max-width: 640px;
+    margin: 0 0 28px; padding: 16px 22px;
+    background: #fff4d6; color: #5a4100;
+    border: 2px solid #f0b429; border-radius: 18px;
+    box-shadow: var(--shadow);
+    font-size: 1.2rem; line-height: 1.4;
+  }
+  .afval[hidden] { display: none; }
+  .afval .bin { font-size: 2.4rem; flex: none; }
+  .afval b { display: block; font-size: 1.3rem; }
+  @media (prefers-color-scheme: dark) {
+    .afval { background: #3a2f12; color: #fbe3a1; border-color: #b8860b; }
+  }
   .weather {
     position: absolute;
     top: 16px;
@@ -317,6 +334,8 @@
     <p id="festive-sub" hidden></p>
     <div id="today"><span id="date"></span><span class="dot">&bull;</span><span id="clock"></span></div>
   </header>
+
+  <div class="afval" id="afval" role="status" hidden><span class="bin" aria-hidden="true">🗑️</span><div id="afval-text"></div></div>
 
   <div class="search" id="search">
     <form action="https://www.google.com/search" method="get" role="search">
@@ -670,8 +689,32 @@
     return d === 1 ? "gisteren" : d + " dagen geleden";
   }
 
-  fetch("feeds.json", { cache: "no-cache" })
-    .then(r => r.json())
+  const feedsData = fetch("feeds.json", { cache: "no-cache" }).then(r => r.json());
+
+  // Waste collection: remind the day before and on the morning itself.
+  let afval = [];
+  function showAfval() {
+    const now = new Date();
+    const today = preview ? new Date(preview + "T" + now.toTimeString().slice(0, 8)) : now;
+    const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const list = types => {
+      const t = types.map(x => x === "Pmd" ? "PMD" : x.toLowerCase());
+      const s = t.length > 1 ? t.slice(0, -1).join(", ") + " en " + t.at(-1) : t[0];
+      return s[0].toUpperCase() + s.slice(1);
+    };
+    let html = "";
+    const t = afval.find(a => a.date === iso(tomorrow));
+    const n = afval.find(a => a.date === iso(today));
+    if (n && today.getHours() < 12) html = `<b>Vandaag wordt het afval opgehaald</b>${list(n.types)}. Staat alles buiten?`;
+    else if (t) html = `<b>Morgen wordt het afval opgehaald</b>${list(t.types)}. Zet het vanavond buiten.`;
+    document.getElementById("afval-text").innerHTML = html;
+    document.getElementById("afval").hidden = !html;
+  }
+  feedsData.then(data => { afval = data.afval || []; showAfval(); setInterval(showAfval, 60000); }).catch(() => {});
+
+  feedsData
     .then(({ feeds }) => {
       feeds = feeds.filter(f => f.items.length);
       if (!feeds.length) return;
