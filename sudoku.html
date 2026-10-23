@@ -85,6 +85,7 @@
   <div class="board" id="board" role="grid" aria-label="Sudoku bord"></div>
   <div class="pad" id="pad" aria-label="Cijferkeuze"></div>
   <div class="status" id="status" aria-live="polite"></div>
+  <button onclick="restart()" style="font:inherit;font-size:1.05rem;font-weight:600;padding:10px 24px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;box-shadow:var(--shadow);margin-top:4px;">Nieuw spel</button>
 </main>
 
 <script>
@@ -203,6 +204,14 @@
   });
 
   init();
+
+  function restart() {
+    statusEl.textContent = 'Spel opnieuw starten...';
+    setTimeout(() => {
+      statusEl.textContent = 'Kies een leeg vakje.';
+      init();
+    }, 300);
+  }
 </script>
 </body>
 </html>
