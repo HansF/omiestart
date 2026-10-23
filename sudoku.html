@@ -167,8 +167,14 @@
     render();
     if (n === 0) { statusEl.textContent = 'Cijfer weggehaald.'; return; }
     if (isSolved()) { statusEl.textContent = '🎉 Goed gedaan, Omi! Je bent klaar!'; setTimeout(() => { statusEl.textContent = 'Klik "Nieuw spel" voor een nieuwe.'; }, 3000); }
-    else if (hasConflict(selected !== null ? selected : 0, n)) { statusEl.textContent = 'Dat veroorzaakt een fout — kijk goed!'; }
-    else { statusEl.textContent = 'Goede zet!'; }
+    else if (n !== 0) {
+      const conflicts = findConflictCells(selected, n);
+      if (conflicts.length) {
+        statusEl.textContent = 'Fout: hetzelfde getal zit ook in rij ' + (Math.floor(conflicts[0]/9)+1) + ' / kolom ' + (conflicts[0]%9+1) + '. Kijk goed!';
+        // Highlight all conflicting cells in red via render (already done by .invalid class)
+      } else { statusEl.textContent = 'Goede zet!'; }
+    }
+    else { statusEl.textContent = 'Cijfer weggehaald.'; }
   }
 
   function hasConflict(i, val) {
@@ -186,6 +192,24 @@
       if (j !== i && grid[j] === val) return true;
     }
     return false;
+  }
+
+  function findConflictCells(i, val) {
+    if (!val) return [];
+    const r = Math.floor(i / 9), c = i % 9;
+    const boxR = Math.floor(r / 3) * 3, boxC = Math.floor(c / 3) * 3;
+    const result = [];
+    for (let k = 0; k < 9; k++) {
+      const j = r * 9 + k; // same row
+      if (j !== i && grid[j] === val) result.push(j);
+      const j2 = k * 9 + c; // same col
+      if (j2 !== i && grid[j2] === val) result.push(j2);
+    }
+    for (let br = 0; br < 3; br++) for (let bc = 0; bc < 3; bc++) {
+      const j = (boxR + br) * 9 + (boxC + bc);
+      if (j !== i && grid[j] === val) result.push(j);
+    }
+    return result;
   }
 
   function isSolved() {
