@@ -209,7 +209,8 @@
       const j = (boxR + br) * 9 + (boxC + bc);
       if (j !== i && grid[j] === val) result.push(j);
     }
-    return result;
+    // Deduplicate
+    return [...new Set(result)];
   }
 
   function isSolved() {
