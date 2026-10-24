@@ -215,7 +215,7 @@
     gap: 16px;
     max-width: 920px;
   }
-  .games { margin-top: 48px; text-align: center; }
+  .games { width: 100%; max-width: 896px; margin-top: 48px; text-align: center; }
   .games h2 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 1.8rem; margin: 0 0 16px; }
   .icon.emoji { font-size: 2rem; }
   .tile {
@@ -250,6 +250,12 @@
   }
   .icon img { width: 34px; height: 34px; }
   .tile span { font-size: 1.05rem; font-weight: 600; text-align: center; line-height: 1.25; }
+
+  .sudoku-frame {
+    display: block; width: 100%; height: 1150px;
+    border: 0; border-radius: 20px; background: #0f1220;
+    box-shadow: var(--shadow);
+  }
 
   /* News */
   .news { width: 100%; max-width: 896px; margin-top: 64px; }
@@ -355,9 +361,10 @@
 
   <main class="grid" id="links"></main>
 
-  <section class="games">
-    <h2>Spelletjes</h2>
-    <div class="grid" id="games"></div>
+  <section class="games" aria-labelledby="sudoku-title">
+    <h2 id="sudoku-title">Sudoku</h2>
+    <iframe id="sudoku-frame" class="sudoku-frame" src="sudoku.html?inline=1"
+            title="Sudoku met zes moeilijkheidsniveaus"></iframe>
   </section>
 
   <section class="news" id="news" hidden>
@@ -404,14 +411,6 @@
     ["Delhaize", "https://www.delhaize.be/nl"],
   ];
 
-  // Spelletjes: [naam, adres, icoon]
-  const GAMES = [
-    ["Woordle", "https://woordle.nl/", "🔤"],
-    ["Sudoku", "sudoku.html", "🔢"],
-    ["Legpuzzels", "https://www.jigsawplanet.com/", "🧩"],
-    ["Mahjong", "https://www.mahjong.nl/", "🀄"],
-  ];
-
   // Tiles: the site's own icon, or an emoji when one is given
   function addTiles(grid, list) {
     for (const [name, url, emoji] of list) {
@@ -437,7 +436,16 @@
     }
   }
   addTiles(document.getElementById("links"), LINKS);
-  addTiles(document.getElementById("games"), GAMES);
+  // Keep the inline game at its natural height, without an inner scrollbar.
+  const sudokuFrame = document.getElementById("sudoku-frame");
+  sudokuFrame.addEventListener("load", () => {
+    const app = sudokuFrame.contentDocument.querySelector(".app");
+    const resize = () => {
+      sudokuFrame.style.height = Math.ceil(app.getBoundingClientRect().height) + "px";
+    };
+    new ResizeObserver(resize).observe(app);
+    resize();
+  });
 
   // Special days: her birthday and Mother's Day (second Sunday of May).
   // Add ?datum=2026-12-13 to the address to preview a day.

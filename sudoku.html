@@ -1,243 +1,72 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sudoku — makkelijk</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #f7f2eb;
-    --bg-glow: #fdf9f4;
-    --card: #ffffff;
-    --text: #2a2420;
-    --muted: #7a6e64;
-    --accent: #b8553a;
-    --accent-soft: #f6e6df;
-    --line: #e8dfd4;
-    --shadow: 0 1px 2px rgba(60,40,20,.05), 0 4px 14px rgba(60,40,20,.06);
-    --shadow-hover: 0 2px 4px rgba(60,40,20,.06), 0 10px 24px rgba(60,40,20,.10);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#1d1916; --bg-glow:#26211d; --card:#2a2420; --text:#f2ebe3; --muted:#a89c91; --accent:#e2876b; --accent-soft:#3a2b25; --line:#3a322c; --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-hover:0 6px 20px rgba(0,0,0,.4); }
-  }
-  * { box-sizing: border-box; }
-  html { font-size: 18px; }
-  body {
-    margin: 0; min-height: 100vh;
-    background: radial-gradient(ellipse at top, var(--bg-glow), var(--bg) 60%) fixed;
-    color: var(--text); font-family: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
-    display: flex; flex-direction: column; align-items: center; padding: 6vh 16px 48px;
-  }
-  header { text-align: center; margin-bottom: 24px; }
-  h1 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 6px; letter-spacing: -.01em; }
-  .subtitle { color: var(--muted); font-size: 1.1rem; margin: 0; }
-  .back { display: inline-block; margin-top: 8px; font-size: 1rem; color: var(--accent); text-decoration: none; font-weight: 600; }
-
-  /* Board frame */
-  .board-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; }
-  .board {
-    display: grid; grid-template-columns: repeat(9, 1fr); gap: 0;
-    background: var(--text); border: 5px solid var(--text); border-radius: 10px;
-    padding: 3px; box-shadow: var(--shadow-hover); user-select: none;
-  }
-  .cell {
-    width: clamp(42px, 10vw, 64px); height: clamp(42px, 10vw, 64px);
-    background: var(--card); display: flex; align-items: center; justify-content: center;
-    font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: clamp(1.3rem, 3.5vw, 1.9rem);
-    color: var(--text); border-radius: 2px; cursor: pointer;
-    transition: background .12s, box-shadow .12s; position: relative;
-    border: 1px solid #eae0d3;
-  }
-  .cell:hover { background: var(--accent-soft); }
-  .cell.selected { background: #f0d0c5; box-shadow: inset 0 0 0 3px var(--accent); }
-  .cell.given { color: var(--text); }
-  .cell.user { color: var(--accent); }
-  .cell.invalid { color: #c44; background: #fdeae5; }
-
-  /* Thick subgrid borders via CSS on 3rd/6th columns/rows */
-  .cell:nth-child(3n):not(:nth-child(9n)) { border-right: 4px solid var(--text); }
-  .cell:nth-child(n+19):nth-child(-n+27), .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 4px solid var(--text); }
-
-  /* Number pad */
-  .pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-  .pad button {
-    font: inherit; font-weight: 600; font-size: 1.2rem; min-width: 56px; min-height: 56px;
-    border: 2px solid var(--line); border-radius: 14px; background: var(--card); color: var(--text);
-    box-shadow: var(--shadow); cursor: pointer; transition: transform .08s, box-shadow .15s, border-color .15s;
-  }
-  .pad button:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--accent); }
-  .pad button:active { transform: translateY(0); }
-  .pad .clear { grid-column: span 5; font-size: 1rem; min-height: 44px; }
-
-  .status { min-height: 1.6rem; font-weight: 600; color: var(--accent); text-align: center; font-size: 1.05rem; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sudoku — zes niveaus</title>
+  <script>
+    if (new URLSearchParams(location.search).has("inline")) document.documentElement.classList.add("inline");
+  </script>
+  <link rel="stylesheet" href="sudoku/style.css" />
 </head>
 <body>
-<header>
-  <h1>Sudoku — makkelijk</h1>
-  <p class="subtitle">Klik een vakje, kies een getal. Probeer het!</p>
-  <a class="back" href="index.html">↺ Terug naar start</a>
-</header>
+  <div class="app">
+    <header class="header">
+      <div><h1>Sudoku</h1><a class="back" href="index.html">← Terug naar start</a></div>
+      <div class="status">
+        <div class="stat"><span class="label">Tijd:</span> <span id="timer">00:00</span></div>
+        <div class="stat"><span class="label">Zetten:</span> <span id="moves">0</span></div>
+      </div>
+    </header>
 
-<main class="board-wrap" aria-label="Sudoku spel">
-  <div class="board" id="board" role="grid" aria-label="Sudoku bord"></div>
-  <div class="pad" id="pad" aria-label="Cijferkeuze"></div>
-  <div class="status" id="status" aria-live="polite"></div>
-  <button onclick="restart()" style="font:inherit;font-size:1.05rem;font-weight:600;padding:10px 24px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;box-shadow:var(--shadow);margin-top:4px;">Nieuw spel</button>
-</main>
+    <section class="controls">
+      <div class="left-controls">
+        <label class="label" for="difficulty">Niveau</label>
+        <select id="difficulty" aria-label="Moeilijkheid">
+          <option value="very-easy">1 · Heel makkelijk</option>
+          <option value="easy" selected>2 · Makkelijk</option>
+          <option value="normal">3 · Gemiddeld</option>
+          <option value="challenging">4 · Uitdagend</option>
+          <option value="hard">5 · Moeilijk</option>
+          <option value="very-hard">6 · Heel moeilijk</option>
+        </select>
+      </div>
+      <div class="right-controls">
+        <button id="newGameBtn" class="btn">Nieuw spel</button>
+        <button id="checkBtn" class="btn" disabled>Controleren</button>
+        <button id="solveBtn" class="btn btn-accent" disabled>Toon oplossing</button>
+      </div>
+    </section>
 
-<script>
-  // Easy puzzle (low difficulty): 36 given cells, 43 to fill
-  const PUZZLE = [
-    [5,3,0,0,7,0,0,0,0],
-    [6,0,0,1,9,5,0,0,0],
-    [0,9,8,0,0,0,0,6,0],
-    [8,0,0,0,6,0,0,0,3],
-    [4,0,0,8,0,3,0,0,1],
-    [7,0,0,0,2,0,0,0,6],
-    [0,6,0,0,0,0,2,8,0],
-    [0,0,0,4,1,9,0,0,5],
-    [0,0,0,0,8,0,0,7,9],
-  ];
-  // Note: this is a hand-curated easy board with only one unique solution.
+    <section class="howto" aria-live="polite">
+      <strong>Zo speel je:</strong>
+      <span>Klik op een leeg vakje en kies een cijfer hieronder of op je toetsenbord. Met “Wissen” maak je het vakje leeg. Kies een niveau en klik op “Nieuw spel” om te wisselen.</span>
+    </section>
 
-  const boardEl = document.getElementById('board');
-  const padEl = document.getElementById('pad');
-  const statusEl = document.getElementById('status');
-  let selected = null; // index 0-80
-  const grid = []; // 81 cells values
-  const given = []; // boolean
+    <main class="board-wrapper">
+      <div id="board" class="board" role="grid" aria-label="Sudokubord"></div>
+    </main>
 
-  function init() {
-    for (let i = 0; i < 81; i++) {
-      const r = Math.floor(i / 9), c = i % 9;
-      grid[i] = PUZZLE[r][c];
-      given[i] = PUZZLE[r][c] !== 0;
-    }
-    render();
-    buildPad();
-    statusEl.textContent = 'Kies een leeg vakje.';
-  }
+    <section class="keypad" aria-label="Cijferkeuze">
+      <button class="key" data-key="1">1</button>
+      <button class="key" data-key="2">2</button>
+      <button class="key" data-key="3">3</button>
+      <button class="key" data-key="4">4</button>
+      <button class="key" data-key="5">5</button>
+      <button class="key" data-key="6">6</button>
+      <button class="key" data-key="7">7</button>
+      <button class="key" data-key="8">8</button>
+      <button class="key" data-key="9">9</button>
+      <button class="key key-erase" data-key="erase">Wissen</button>
+    </section>
 
-  function render() {
-    boardEl.innerHTML = '';
-    for (let i = 0; i < 81; i++) {
-      const cell = document.createElement('button');
-      cell.className = 'cell';
-      cell.setAttribute('aria-label', 'Rij ' + (Math.floor(i/9)+1) + ', kolom ' + (i%9+1));
-      cell.setAttribute('role', 'gridcell');
-      if (given[i]) cell.classList.add('given');
-      else if (grid[i]) cell.classList.add('user');
-      cell.textContent = grid[i] ? grid[i] : '';
-      if (i === selected) cell.classList.add('selected');
-      cell.addEventListener('click', () => { selected = i; render(); });
-      boardEl.appendChild(cell);
-    }
-    // Check basic conflicts for visual feedback
-    for (let i = 0; i < 81; i++) {
-      const cellEl = boardEl.children[i];
-      if (!given[i] && grid[i] && hasConflict(i, grid[i])) cellEl.classList.add('invalid');
-    }
-  }
+    <p id="message" class="message" role="status" aria-live="polite"></p>
 
-  function buildPad() {
-    padEl.innerHTML = '';
-    for (let n = 1; n <= 9; n++) {
-      const btn = document.createElement('button');
-      btn.textContent = n;
-      btn.setAttribute('aria-label', 'Cijfer ' + n);
-      btn.addEventListener('click', () => enterNumber(n));
-      padEl.appendChild(btn);
-    }
-    const clear = document.createElement('button');
-    clear.className = 'clear';
-    clear.textContent = 'Leegmaken';
-    clear.addEventListener('click', () => enterNumber(0));
-    padEl.appendChild(clear);
-  }
+    <footer class="footer">
+      <p>Elk cijfer van 1 tot 9 mag maar één keer in elke rij, kolom en elk blok van 3 × 3 staan.</p>
+    </footer>
+  </div>
 
-  function enterNumber(n) {
-    if (selected === null) { statusEl.textContent = 'Klik eerst op een vakje.'; return; }
-    if (given[selected]) { statusEl.textContent = 'Dit vakje is al ingevuld.'; return; }
-    grid[selected] = n;
-    selected = null;
-    render();
-    if (n === 0) { statusEl.textContent = 'Cijfer weggehaald.'; return; }
-    if (isSolved()) { statusEl.textContent = '🎉 Goed gedaan, Omi! Je bent klaar!'; setTimeout(() => { statusEl.textContent = 'Klik "Nieuw spel" voor een nieuwe.'; }, 3000); }
-    else if (n !== 0) {
-      const conflicts = findConflictCells(selected, n);
-      if (conflicts.length) {
-        statusEl.textContent = 'Fout: hetzelfde getal zit ook in rij ' + (Math.floor(conflicts[0]/9)+1) + ' / kolom ' + (conflicts[0]%9+1) + '. Kijk goed!';
-        // Highlight all conflicting cells in red via render (already done by .invalid class)
-      } else { statusEl.textContent = 'Goede zet!'; }
-    }
-    else { statusEl.textContent = 'Cijfer weggehaald.'; }
-  }
-
-  function hasConflict(i, val) {
-    if (!val) return false;
-    const r = Math.floor(i / 9), c = i % 9;
-    const boxR = Math.floor(r / 3) * 3, boxC = Math.floor(c / 3) * 3;
-    for (let k = 0; k < 9; k++) {
-      const j = r * 9 + k; // same row
-      if (j !== i && grid[j] === val) return true;
-      const j2 = k * 9 + c; // same col
-      if (j2 !== i && grid[j2] === val) return true;
-    }
-    for (let br = 0; br < 3; br++) for (let bc = 0; bc < 3; bc++) {
-      const j = (boxR + br) * 9 + (boxC + bc);
-      if (j !== i && grid[j] === val) return true;
-    }
-    return false;
-  }
-
-  function findConflictCells(i, val) {
-    if (!val) return [];
-    const r = Math.floor(i / 9), c = i % 9;
-    const boxR = Math.floor(r / 3) * 3, boxC = Math.floor(c / 3) * 3;
-    const result = [];
-    for (let k = 0; k < 9; k++) {
-      const j = r * 9 + k; // same row
-      if (j !== i && grid[j] === val) result.push(j);
-      const j2 = k * 9 + c; // same col
-      if (j2 !== i && grid[j2] === val) result.push(j2);
-    }
-    for (let br = 0; br < 3; br++) for (let bc = 0; bc < 3; bc++) {
-      const j = (boxR + br) * 9 + (boxC + bc);
-      if (j !== i && grid[j] === val) result.push(j);
-    }
-    // Deduplicate
-    return [...new Set(result)];
-  }
-
-  function isSolved() {
-    for (let i = 0; i < 81; i++) if (!grid[i]) return false;
-    for (let i = 0; i < 81; i++) if (hasConflict(i, grid[i])) return false;
-    return true;
-  }
-
-  // Keyboard support: arrows + numbers
-  document.addEventListener('keydown', (e) => {
-    if (e.key >= '1' && e.key <= '9') { enterNumber(parseInt(e.key)); e.preventDefault(); }
-    else if (e.key === 'Backspace' || e.key === 'Delete') { enterNumber(0); e.preventDefault(); }
-    else if (e.key === 'ArrowRight') { if (selected !== null) { selected = Math.min(80, selected + 1); render(); } e.preventDefault(); }
-    else if (e.key === 'ArrowLeft') { if (selected !== null) { selected = Math.max(0, selected - 1); render(); } e.preventDefault(); }
-    else if (e.key === 'ArrowDown') { if (selected !== null) { selected = Math.min(80, selected + 9); render(); } e.preventDefault(); }
-    else if (e.key === 'ArrowUp') { if (selected !== null) { selected = Math.max(0, selected - 9); render(); } e.preventDefault(); }
-  });
-
-  init();
-
-  function restart() {
-    statusEl.textContent = 'Spel opnieuw starten...';
-    setTimeout(() => {
-      statusEl.textContent = 'Kies een leeg vakje.';
-      init();
-    }, 300);
-  }
-</script>
+  <script src="sudoku/script.js"></script>
 </body>
 </html>

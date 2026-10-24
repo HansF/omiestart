@@ -30,7 +30,7 @@ jobs:
       - run: node scripts/fetch-feeds.mjs
         env:
           AFVAL_URL: ${{ secrets.AFVAL_URL }}
-      - run: mkdir _site && cp index.html feeds.json robots.txt _site/
+      - run: mkdir _site && cp index.html sudoku.html feeds.json robots.txt _site/ && cp -r sudoku _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
