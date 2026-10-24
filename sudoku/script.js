@@ -1,7 +1,6 @@
 // Adapted from EleftheriaBatsou/sudoku; see README.md for source and permission.
 (function () {
   const boardEl = document.getElementById("board");
-  const timerEl = document.getElementById("timer");
   const movesEl = document.getElementById("moves");
   const newGameBtn = document.getElementById("newGameBtn");
   const checkBtn = document.getElementById("checkBtn");
@@ -16,8 +15,6 @@
   let solution = createEmptyBoard();
   let given = createEmptyBoardBoolean();
   let selectedCell = null;
-  let timerInterval = null;
-  let startTime = null;
   let moves = 0;
   let gameStarted = false;
 
@@ -155,30 +152,9 @@
     return board;
   }
 
-  function formatTime(ms) {
-    const total = Math.floor(ms / 1000);
-    const m = Math.floor(total / 60);
-    const s = total % 60;
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  }
-
-  function startTimer() {
-    stopTimer();
-    startTime = Date.now();
-    timerInterval = setInterval(() => {
-      timerEl.textContent = formatTime(Date.now() - startTime);
-    }, 200);
-  }
-
-  function stopTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = null;
-  }
-
   function resetStats() {
     moves = 0;
     movesEl.textContent = String(moves);
-    timerEl.textContent = "00:00";
   }
 
   function buildBoardUI() {
@@ -416,7 +392,6 @@
     renderGivenMask();
     buildBoardUI();
     validateConflicts();
-    startTimer();
 
     // Enable action buttons
     checkBtn.disabled = false;
@@ -448,9 +423,8 @@
     }
 
     if (allFilled && allCorrect) {
-      stopTimer();
       gameStarted = false;
-      messageEl.textContent = `Goed gedaan, Omi! Opgelost in ${timerEl.textContent} met ${moves} zetten.`;
+      messageEl.textContent = `Goed gedaan, Omi! Opgelost met ${moves} zetten.`;
     } else if (!allFilled) {
       messageEl.textContent = "Er zijn nog lege vakjes of fouten. Probeer verder!";
     } else {
@@ -464,7 +438,6 @@
     puzzle = cloneBoard(solution);
     buildBoardUI();
     validateConflicts();
-    stopTimer();
     gameStarted = false;
     messageEl.textContent = "Dit is de oplossing. Kies Nieuw spel voor een nieuwe puzzel.";
   }
